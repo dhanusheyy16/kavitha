@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Upload Products</title>
+    <title>Customer Panel - Saree Elegance</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,14 +23,15 @@
             margin: 20px auto;
         }
 
-        form {
+        .form-container {
             background-color: #ffffff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
-        form input, form textarea, form button {
+        .form-container input {
             display: block;
             width: 100%;
             max-width: 500px;
@@ -41,83 +42,157 @@
             border-radius: 5px;
         }
 
-        form button {
+        .form-container button {
             background-color: #008cba;
             color: white;
             border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
             cursor: pointer;
         }
 
-        form button:hover {
+        .form-container button:hover {
             background-color: #006f8e;
         }
 
-        footer {
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .product {
+            border: 1px solid #ddd;
+            padding: 10px;
             text-align: center;
-            padding: 15px;
-            background-color: #005f73;
-            color: white;
-            position: fixed;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .product img {
             width: 100%;
-            bottom: 0;
-            left: 0;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .product h3 {
+            font-size: 22px;
+            margin: 15px 0;
+            color: #005f73;
+        }
+
+        .product p {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .product button {
+            background-color: #008cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .product button:hover {
+            background-color: #006f8e;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Admin Panel</h1>
+        <h1>Welcome to Saree Elegance</h1>
     </header>
 
     <div class="container">
-        <form id="product-form">
-            <h2>Upload a Product</h2>
-            <input type="text" id="product-name" placeholder="Product Name" required>
-            <input type="number" id="product-price" placeholder="Price (₹)" required>
-            <textarea id="product-description" placeholder="Description" required></textarea>
-            <input type="file" id="product-image" accept="image/*" required>
-            <button type="submit">Upload</button>
-        </form>
+        <!-- Customer Details Form -->
+        <div class="form-container" id="customer-form-container">
+            <h2>Enter Your Details</h2>
+            <input type="text" id="customer-name" placeholder="Your Name" required>
+            <input type="text" id="customer-location" placeholder="Your Location" required>
+            <button onclick="submitCustomerDetails()">Submit</button>
+        </div>
+
+        <!-- Product List -->
+        <div class="product-grid" id="product-list" style="display: none;">
+            <!-- Dynamically generated products will be inserted here -->
+        </div>
     </div>
 
-    <footer>
-        <p>&copy; 2024 Saree Elegance. All Rights Reserved.</p>
-    </footer>
-
     <script>
-        document.getElementById("product-form").addEventListener("submit", function(e) {
-            e.preventDefault();
+        let customerDetails = {};
 
-            const productName = document.getElementById("product-name").value;
-            const productPrice = document.getElementById("product-price").value;
-            const productDescription = document.getElementById("product-description").value;
-            const productImageFile = document.getElementById("product-image").files[0];
+        // Save customer details and display product list
+        function submitCustomerDetails() {
+            const name = document.getElementById("customer-name").value;
+            const location = document.getElementById("customer-location").value;
 
-            if (productImageFile) {
-                const reader = new FileReader();
-
-                reader.onload = function(event) {
-                    const product = {
-                        name: productName,
-                        price: productPrice,
-                        description: productDescription,
-                        image: event.target.result
-                    };
-
-                    // Save product to localStorage
-                    let products = JSON.parse(localStorage.getItem("products")) || [];
-                    products.push(product);
-                    localStorage.setItem("products", JSON.stringify(products));
-
-                    alert("Product uploaded successfully!");
-                    document.getElementById("product-form").reset();
-                };
-
-                reader.readAsDataURL(productImageFile);
+            if (name && location) {
+                customerDetails = { name, location };
+                document.getElementById("customer-form-container").style.display = "none";
+                loadProducts();
+                document.getElementById("product-list").style.display = "grid";
             } else {
-                alert("Please upload a valid image.");
+                alert("Please fill in both fields.");
             }
-        });
+        }
+
+        // Load products from localStorage
+        function loadProducts() {
+            const products = JSON.parse(localStorage.getItem("products")) || [];
+            const productList = document.getElementById("product-list");
+
+            productList.innerHTML = ""; // Clear existing content
+
+            if (products.length > 0) {
+                products.forEach(product => {
+                    const productDiv = document.createElement("div");
+                    productDiv.classList.add("product");
+                    productDiv.innerHTML = `
+                        <img src="${product.image}" alt="${product.name}">
+                        <h3>${product.name}</h3>
+                        <p>Price: ₹${product.price}</p>
+                        <p>${product.description}</p>
+                        <button onclick="placeOrder('${product.name}', '${product.image}', ${product.price})">Order Now</button>
+                    `;
+                    productList.appendChild(productDiv);
+                });
+            } else {
+                productList.innerHTML = `<p>No products available. Please check back later.</p>`;
+            }
+        }
+
+        // Place order via WhatsApp
+        function placeOrder(productName, price) {
+            if (!customerDetails.name || !customerDetails.location) {
+                alert("Please enter your details first.");
+                return;
+            }
+
+            const { name, location } = customerDetails;
+            const message = `
+                *Customer Order Details*:
+                -------------------------
+                *Name*: ${name}
+                *Location*: ${location}
+
+                -------------------------
+                *Ordered Product*:
+                *Name*: ${productName}
+                *Price*: ₹${price}
+
+                
+            `;
+            
+            const whatsappUrl = `https://wa.me/919361550283?text=${encodeURIComponent(message)}`;
+
+            // Open WhatsApp URL
+            window.open(whatsappUrl, "_blank");
+        }
     </script>
 </body>
 </html>
